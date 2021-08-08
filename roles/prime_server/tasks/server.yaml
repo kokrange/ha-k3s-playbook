@@ -1,0 +1,52 @@
+---
+- name: copy k3s server install script
+  copy:
+    src: k3s_server.sh
+    dest: k3s_server.sh
+    mode: "0755"
+
+- name: deploy k3s server
+  become: yes
+  command: ./k3s_server.sh {{ k3s_name }} {{ k3s_token }} {{ k3s_version }}
+
+- name: service facts
+  service_facts:
+
+- name: check k3s service
+  vars:
+    - sn: k3s-{{ k3s_name }}.service
+  fail:
+    msg: "{{ k3s_name }} k3s not running:  {{ ansible_facts.services[sn] }}"
+  when: (ansible_facts.services[sn] is not defined) or
+    (ansible_facts.services[sn].state != "running")
+
+- name: wait master node ready
+  command: kubectl get nodes -o=json
+  register: kubectl_get_nodes
+  until: kubectl_get_nodes.stdout | from_json | json_query('items[0].status.conditions[?type==`Ready`].status') == [ "True" ]
+  retries: 180
+  delay: 1
+
+- name: wait traefik start deploy
+  command: kubectl -n=kube-system get deploy -o=json
+  register: kubectl_get_deploy
+  until:
+    - kubectl_get_deploy.stdout | from_json | json_query('items[*].metadata.annotations.\"meta.helm.sh/release-name\"') | json_query('[?contains(@, `traefik`)]') != []
+  retries: 180
+  delay: 1
+
+- name: wait traefik deploy finish
+  command: kubectl -n=kube-system get deploy traefik -o=json
+  register: kubectl_get_traefik_deploy
+  until:
+    - kubectl_get_traefik_deploy.stdout | from_json | json_query('status.readyReplicas') == 1
+  retries: 180
+  delay: 1
+
+- name: clean files
+  file:
+    path: "{{ item }}"
+    state: absent
+  with_items:
+    - k3s_install.sh
+    - k3s_server.sh

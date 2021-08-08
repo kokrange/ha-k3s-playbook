@@ -1,0 +1,7 @@
+fullnameOverride: nfs-client-provisioner
+nfs:
+  server: NFS_SERVER_IP
+  path: NFS_MOUNT_PATH
+storageClass:
+  defaultClass: true
+  reclaimPolicy: Delete

@@ -1,0 +1,61 @@
+version: "3"
+services:
+  mongo-rs0-0:
+    container_name: m-0
+    image: mongo:4
+    expose:
+      - 27017
+    ports:
+      - 27010:27017
+    volumes:
+      - DOCKER_VOL_PATH/mongo/data/rs0-0:/data/db
+    restart: always
+    entrypoint: ["/usr/bin/mongod", "--bind_ip_all", "--replSet", "rs0"]
+    healthcheck:
+      test: test $$(echo "rs.status().ok" | mongo --quiet) -eq 1
+      interval: 10s
+      start_period: 30s
+
+  mongo-rs0-1:
+    container_name: m-1
+    image: mongo:4
+    expose:
+      - 27017
+    ports:
+      - 27011:27017
+    volumes:
+      - DOCKER_VOL_PATH/mongo/data/rs0-1:/data/db
+    restart: always
+    entrypoint: ["/usr/bin/mongod", "--bind_ip_all", "--replSet", "rs0"]
+    healthcheck:
+      test: test $$(echo "rs.status().ok" | mongo --quiet) -eq 1
+      interval: 10s
+      start_period: 30s
+
+  mongo-rs0-2:
+    container_name: m-2
+    image: mongo:4
+    expose:
+      - 27017
+    ports:
+      - 27012:27017
+    volumes:
+      - DOCKER_VOL_PATH/mongo/data/rs0-2:/data/db
+    restart: always
+    entrypoint: ["/usr/bin/mongod", "--bind_ip_all", "--replSet", "rs0"]
+    healthcheck:
+      test: test $$(echo "rs.status().ok" | mongo --quiet) -eq 1
+      interval: 10s
+      start_period: 30s
+
+  setup-rs:
+    image: "setup-rs"
+    build: ./setup
+    entrypoint: ["/bin/bash", "./setup.sh"]
+    depends_on:
+      mongo-rs0-0:
+        condition: service_started
+      mongo-rs0-1:
+        condition: service_started
+      mongo-rs0-2:
+        condition: service_started

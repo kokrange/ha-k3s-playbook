@@ -1,0 +1,69 @@
+---
+- name: create nfs share folder
+  become: yes
+  file:
+    path: "{{ nfs_mount_path }}"
+    state: directory
+    mode: "0777"
+
+- name: copy net access config file template
+  become: yes
+  copy:
+    src: exports
+    dest: /etc/exports
+
+- name: modify net access config file mount path
+  become: yes
+  replace:
+    path: /etc/exports
+    regexp: "NFS_MOUNT_PATH"
+    replace: "{{ nfs_mount_path }}"
+
+- name: install nfs
+  become: yes
+  apt:
+    name: nfs-kernel-server
+    update_cache: yes
+
+- name: service facts
+  service_facts:
+
+- name: check nfs service
+  fail:
+    msg: "nfs service not running:  {{ ansible_facts.services['nfs-kernel-server'] }}"
+  when: (ansible_facts.services['nfs-kernel-server'] is not defined) or
+    (ansible_facts.services['nfs-kernel-server'].state != "running")
+
+- name: export nfs share folder
+  become: yes
+  command: exportfs -a -v
+  register: export
+
+- debug:
+    msg: "{{ export.stdout }}"
+
+- name: enable nfs locking monitor service
+  become: yes
+  service:
+    name: rpc-statd
+    enabled: yes
+
+- name: restart nfs locking monitor
+  become: yes
+  service:
+    name: rpc-statd
+    state: restarted
+
+- name: restart nfs service
+  become: yes
+  service:
+    name: nfs-kernel-server
+    state: restarted    
+
+- name: service facts
+  service_facts:
+
+- name: check nfs service
+  fail:
+    msg: "nfs service not running:  {{ ansible_facts.services['nfs-kernel-server'] }}"
+  when: ansible_facts.services['nfs-kernel-server'].state != "running"

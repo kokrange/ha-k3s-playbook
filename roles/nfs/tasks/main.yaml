@@ -1,0 +1,6 @@
+---
+- name: service facts
+  service_facts:
+
+- include_tasks: nfs.yaml
+  when: ansible_facts.services['nfs-kernel-server'] is not defined

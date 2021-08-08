@@ -1,0 +1,18 @@
+---
+- name: copy k3s official installation script
+  copy:
+    src: k3s_install.sh
+    dest: k3s_install.sh
+    mode: "0755"
+
+- name: copy k3s dns file
+  copy:
+    src: resolv.conf
+    dest: resolv.conf
+    mode: "0644"
+
+- name: install nfs-common
+  become: yes
+  apt:
+    name: nfs-common
+    update_cache: yes

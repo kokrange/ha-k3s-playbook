@@ -1,0 +1,1 @@
+NFS_MOUNT_PATH 192.168.0.0/16(rw,async,no_subtree_check,no_root_squash)

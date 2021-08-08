@@ -1,0 +1,29 @@
+---
+- hosts: store
+  roles:
+    - db
+    - nfs
+
+- hosts: k3s_prime_server
+  roles:
+    - prep
+    - prime_server
+
+- hosts: k3s_ha_servers
+  serial: 1
+  roles:
+    - prep
+    - ha_server
+
+- hosts: k3s_agents
+  roles:
+    - prep
+    - agent
+
+- hosts: k3s_prime_server
+  roles:
+    - check_nodes
+
+- hosts: k3s_prime_server
+  roles:
+    - nfs_client_provisioner

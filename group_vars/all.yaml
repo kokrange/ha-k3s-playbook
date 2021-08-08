@@ -1,0 +1,5 @@
+---
+k3s_version: "v1.21.2+k3s1"
+k3s_name: "infrastructure"
+k3s_token: "RB3puvDGS1"
+nfs_mount_path: "/mnt/nfsshare"

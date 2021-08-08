@@ -1,0 +1,8 @@
+---
+- name: service facts
+  service_facts:
+
+- include_tasks: prep.yaml
+  vars:
+    - sn: k3s-{{ k3s_name }}.service
+  when: ansible_facts.services[sn] is not defined

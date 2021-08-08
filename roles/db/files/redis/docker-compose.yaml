@@ -1,0 +1,15 @@
+version: "3"
+services:
+  redis:
+    image: redis:5.0.6
+    container_name: redis
+    restart: always
+    ports:
+      - 6379:6379
+    volumes:
+      - DOCKER_VOL_PATH/redis/data:/data
+      - DOCKER_VOL_PATH/redis/redis.conf:/etc/redis.conf
+    healthcheck:
+      test: test $$(redis-cli -h 127.0.0.1 ping) = PONG
+      interval: 10s
+      start_period: 30s

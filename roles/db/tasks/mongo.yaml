@@ -1,0 +1,39 @@
+---
+- name: create docker vol folder
+  become: yes
+  file:
+    path: "{{ item }}"
+    state: directory
+  with_items:
+    - "{{ docker_vol_path }}/mongo/data/rs0-0"
+    - "{{ docker_vol_path }}/mongo/data/rs0-1"
+    - "{{ docker_vol_path }}/mongo/data/rs0-2"
+
+- name: copy compose folder
+  copy:
+    src: mongo
+    dest: .
+
+- name: modify mongo replicas ip
+  replace:
+    path: mongo/setup/replicaSet.js
+    regexp: "MONGO_HOST_IP"
+    replace: "{{ hostvars.data.ansible_host }}"
+
+- name: modify mongo docker volume path
+  replace:
+    path: mongo/docker-compose.yaml
+    regexp: "DOCKER_VOL_PATH"
+    replace: "{{ docker_vol_path }}"
+
+- name: start mongo
+  command: docker-compose up -d --build
+  args:
+    chdir: mongo/
+
+- name: wait mongo rs healthy
+  command: docker inspect m-0 m-1 m-2
+  register: docker_inspect
+  until: docker_inspect.stdout | from_json | json_query('[*].State.Health.Status') == [ "healthy", "healthy", "healthy" ]
+  retries: 180
+  delay: 1

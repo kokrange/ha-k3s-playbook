@@ -1,0 +1,29 @@
+---
+- name: copy k3s agent install script
+  copy:
+    src: k3s_node.sh
+    dest: k3s_node.sh
+    mode: "0755"
+
+- name: deploy k3s agent
+  become: yes
+  command: ./k3s_node.sh {{ k3s_name }} {{ k3s_token }} {{ k3s_version }} {{ hostvars.prime_master.ansible_host }}
+
+- name: service facts
+  service_facts:
+
+- name: check k3s service
+  vars:
+    - sn: k3s-{{ k3s_name }}.service
+  fail:
+    msg: "{{ k3s_name }} k3s not running:  {{ ansible_facts.services[sn] }}"
+  when: (ansible_facts.services[sn] is not defined) or
+    (ansible_facts.services[sn].state != "running")
+
+- name: clean files
+  file:
+    path: "{{ item }}"
+    state: absent
+  with_items:
+    - k3s_install.sh
+    - k3s_node.sh

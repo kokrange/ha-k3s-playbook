@@ -1,0 +1,84 @@
+---
+- name: add helm apt key
+  become: yes
+  apt_key:
+    url: "https://baltocdn.com/helm/signing.asc"
+    state: present
+
+- name: install apt-transport-https
+  become: yes
+  apt:
+    name: apt-transport-https
+    update_cache: yes
+
+- name: copy helm source.list
+  become: yes
+  copy:
+    src: helm-stable-debian.list
+    dest: /etc/apt/sources.list.d/helm-stable-debian.list
+
+- name: install helm
+  become: yes
+  apt:
+    name: helm
+    update_cache: yes
+
+- name: copy helm chart value template
+  copy:
+    src: values.yaml
+    dest: values.yaml
+
+- name: modify nfs server ip
+  replace:
+    path: values.yaml
+    regexp: "NFS_SERVER_IP"
+    replace: "{{ hostvars.data.ansible_host }}"
+
+- name: modify nfs mount path
+  replace:
+    path: values.yaml
+    regexp: "NFS_MOUNT_PATH"
+    replace: "{{ nfs_mount_path }}"
+
+- name: helm add stable repo
+  command: helm repo add stable https://charts.helm.sh/stable
+
+- name: helm update repo
+  command: helm repo update
+
+- name: helm install nfs client
+  command: helm --kubeconfig /etc/rancher/k3s/k3s.yaml upgrade -i nfs stable/nfs-client-provisioner -f values.yaml -n kube-system
+  register: helm_nfs_install
+
+- debug:
+    msg: "{{ helm_nfs_install.stdout }}"
+
+- name: wait nfs client ready
+  command: kubectl -n=kube-system get deploy nfs-client-provisioner -o=json
+  register: kubectl_nfs_client
+  until: kubectl_nfs_client.stdout | from_json | json_query('status.readyReplicas') == 1
+  retries: 180
+  delay: 1
+
+- name: remove helm
+  become: yes
+  apt:
+    name: helm
+    state: absent
+
+- name: remove helm source.list
+  become: yes
+  file:
+    path: /etc/apt/sources.list.d/helm-stable-debian.list
+    state: absent
+
+- name: remove apt-transport-https
+  become: yes
+  apt:
+    name: apt-transport-https
+    state: absent
+
+- name: remove helm chart value
+  file:
+    path: values.yaml
+    state: absent

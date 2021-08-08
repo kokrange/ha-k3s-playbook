@@ -1,0 +1,26 @@
+---
+- name: copy docker install script
+  copy:
+    src: get_docker.sh
+    dest: get_docker.sh
+    mode: "0755"
+
+- name: install docker
+  become: yes
+  command: ./get_docker.sh
+  register: docker_install
+
+- debug:
+    msg: "{{ docker_install.stdout }}"
+
+- name: add docker group
+  become: yes
+  command: usermod -aG docker {{ ansible_env.USER }}
+
+- name: reset ssh connection
+  meta: reset_connection
+
+- name: remove docker install script
+  file:
+    path: get_docker.sh
+    state: absent

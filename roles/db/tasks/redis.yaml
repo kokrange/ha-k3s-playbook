@@ -1,0 +1,40 @@
+---
+- name: create docker vol folder
+  become: yes
+  file:
+    path: "{{ docker_vol_path }}/redis/data"
+    state: directory
+
+- name: create compose folder
+  file:
+    path: ./redis
+    state: directory
+
+- name: copy compose
+  copy:
+    src: redis/docker-compose.yaml
+    dest: ./redis/docker-compose.yaml
+
+- name: copy redis config
+  become: yes
+  copy:
+    src: redis/redis.conf
+    dest: "{{ docker_vol_path }}/redis/redis.conf"
+
+- name: modify docker volume path
+  replace:
+    path: redis/docker-compose.yaml
+    regexp: "DOCKER_VOL_PATH"
+    replace: "{{ docker_vol_path }}"
+
+- name: start redis
+  command: docker-compose up -d
+  args:
+    chdir: redis/
+
+- name: wait redis healthy
+  command: docker inspect redis
+  register: docker_inspect
+  until: docker_inspect.stdout | from_json | json_query('[*].State.Health.Status') == [ "healthy" ]
+  retries: 180
+  delay: 1

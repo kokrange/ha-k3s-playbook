@@ -1,0 +1,17 @@
+version: "3"
+services:
+  mysql:
+    image: mysql:5.7
+    container_name: mysql
+    restart: always
+    ports:
+      - 3306:3306
+    volumes:
+      - DOCKER_VOL_PATH/mysql/data:/var/lib/mysql
+      - DOCKER_VOL_PATH/mysql/my.cnf:/etc/mysql/my.cnf
+    environment:
+      - MYSQL_ROOT_PASSWORD=abc123_
+    healthcheck:
+      test: MYSQL_PWD="${MYSQL_PASSWORD:-$MYSQL_ROOT_PASSWORD}" mysqladmin -uroot ping
+      interval: 10s
+      start_period: 30s

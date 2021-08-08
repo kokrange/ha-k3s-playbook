@@ -1,0 +1,56 @@
+---
+all:
+  children:
+    k3s_prime_server:
+      hosts:
+        prime_master:
+          ansible_host: 192.168.3.190
+          ansible_port: 22
+          ansible_user: developer
+          ansible_ssh_private_key_file: ./ssh-key/k3s-key
+          ansible_become_pass: my-sudo-pass
+          ansible_ssh_common_args: "-o StrictHostKeyChecking=no"
+
+    k3s_ha_servers:
+      hosts:
+        ha_master1:
+          ansible_host: 192.168.3.37
+          ansible_port: 22
+          ansible_user: developer
+          ansible_ssh_private_key_file: ./ssh-key/k3s-key
+          ansible_become_pass: my-sudo-pass
+          ansible_ssh_common_args: "-o StrictHostKeyChecking=no"
+        ha_master2:
+          ansible_host: 192.168.3.52
+          ansible_port: 22
+          ansible_user: developer
+          ansible_ssh_private_key_file: ./ssh-key/k3s-key
+          ansible_become_pass: my-sudo-pass
+          ansible_ssh_common_args: "-o StrictHostKeyChecking=no"
+
+    k3s_agents:
+      hosts:
+        node1:
+          ansible_host: 192.168.3.131
+          ansible_port: 22
+          ansible_user: developer
+          ansible_ssh_private_key_file: ./ssh-key/k3s-key
+          ansible_become_pass: my-sudo-pass
+          ansible_ssh_common_args: "-o StrictHostKeyChecking=no"
+        node2:
+          ansible_host: 192.168.3.18
+          ansible_port: 22
+          ansible_user: developer
+          ansible_ssh_private_key_file: ./ssh-key/k3s-key
+          ansible_become_pass: my-sudo-pass
+          ansible_ssh_common_args: "-o StrictHostKeyChecking=no"
+   
+    store:
+      hosts:
+        data:
+          ansible_host: 192.168.3.54
+          ansible_port: 22
+          ansible_user: developer
+          ansible_ssh_private_key_file: ./ssh-key/k3s-key
+          ansible_become_pass: my-sudo-pass
+          ansible_ssh_common_args: "-o StrictHostKeyChecking=no"

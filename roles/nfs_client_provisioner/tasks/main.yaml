@@ -1,0 +1,8 @@
+---
+- name: check nfs client
+  command: kubectl -n=kube-system get deploy nfs-client-provisioner -o=json
+  register: kubectl_nfs_client_installed
+  failed_when: false
+
+- include_tasks: nfs_cli_prov.yaml
+  when: kubectl_nfs_client_installed.stdout == ''
