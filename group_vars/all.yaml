@@ -1,5 +1,5 @@
 ---
 k3s_version: "v1.21.2+k3s1"
-k3s_name: "infrastructure"
-k3s_token: "RB3puvDGS1"
+k3s_name: "your_cluster_name"
+k3s_token: "your_radom_string_token"
 nfs_mount_path: "/mnt/nfsshare"
